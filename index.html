@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basislager Events</title>
+    <style>
+        /* Add Founders Grotesk font */
+        @font-face {
+            font-family: 'Founders Grotesk';
+            src: url('https://uploads-ssl.webflow.com/5e80894f63c557e083ed96b4/5e8089a25b6234f53e3b908b_FoundersGrotesk-Regular.woff2') format('woff2'),
+                 url('https://uploads-ssl.webflow.com/5e80894f63c557e083ed96b4/5e8089a25b6234ee4e3b908c_FoundersGrotesk-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Founders Grotesk';
+            src: url('https://uploads-ssl.webflow.com/5e80894f63c557e083ed96b4/5e8089a25b6234ee4e3b908c_FoundersGrotesk-Medium.woff2') format('woff2'),
+                 url('https://uploads-ssl.webflow.com/5e80894f63c557e083ed96b4/5e8089a25b6234ee4e3b908c_FoundersGrotesk-Medium.woff') format('woff');
+            font-weight: 500;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Founders Grotesk';
+            src: url('https://uploads-ssl.webflow.com/5e80894f63c557e083ed96b4/5e8089a25b6234ee4e3b908c_FoundersGrotesk-Bold.woff2') format('woff2'),
+                 url('https://uploads-ssl.webflow.com/5e80894f63c557e083ed96b4/5e8089a25b6234ee4e3b908c_FoundersGrotesk-Bold.woff') format('woff');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        :root {
+            --accent-green: #00E676;
+            --bg-dark: #1a1f23;
+            --card-bg: #1e262c;
+            --text-light: #ffffff;
+            --text-gray: #a0a0a0;
+            --gradient-dark: linear-gradient(135deg, #1e262c 0%, #2a363f 100%);
+            --font-primary: 'Founders Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Update specific font styles */
+        .header-text h1 {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .header-text p {
+            font-weight: 400;
+            letter-spacing: 0.01em;
+        }
+
+        .events-list h2 {
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .event-date-box .day {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .event-date-box .month {
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        .event-title {
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .event-description {
+            font-weight: 400;
+            letter-spacing: 0.01em;
+        }
+
+        .event-meta {
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .event-detail-header h2 {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .about-event h3 {
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .about-event p {
+            font-weight: 400;
+            letter-spacing: 0.01em;
+            line-height: 1.6;
+        }
+
+        .info-label {
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .tag {
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .event-counter {
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--gradient-dark);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        }
+
+        .header-text h1 {
+            color: var(--accent-green);
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-text p {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+
+        .content {
+            padding: 1.5rem;
+        }
+
+        .events-list {
+            margin-bottom: 2rem;
+        }
+
+        .events-list h2 {
+            color: var(--accent-green);
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .events-list h2::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 24px;
+            background: var(--accent-green);
+            border-radius: 2px;
+        }
+
+        .events-container {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding: 0.5rem 0.25rem;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .events-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .events-container::-webkit-scrollbar-track {
+            background: var(--card-bg);
+            border-radius: 4px;
+        }
+
+        .events-container::-webkit-scrollbar-thumb {
+            background: var(--accent-green);
+            border-radius: 4px;
+        }
+
+        .event-card {
+            flex: 0 0 300px;
+            background: var(--gradient-dark);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            scroll-snap-align: start;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .event-date-box {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(30, 38, 44, 0.9);
+            padding: 0.75rem;
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .event-date-box .day {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-green);
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .event-date-box .month {
+            font-size: 0.8rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+        }
+
+        .event-thumbnail {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .event-card-content {
+            padding: 1.25rem;
+            background: linear-gradient(0deg, var(--card-bg) 0%, rgba(30, 38, 44, 0.8) 100%);
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .event-card:hover .event-card-content {
+            transform: translateY(-40px);
+        }
+
+        .event-title {
+            color: var(--accent-green);
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .event-description {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .event-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .event-meta span {
+            color: var(--text-gray);
+        }
+
+        .event-detail {
+            background: var(--gradient-dark);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .event-detail-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            transform: scale(1);
+            transition: transform 0.5s ease;
+        }
+
+        .event-detail:hover .event-detail-image {
+            transform: scale(1.05);
+        }
+
+        .event-detail-content {
+            padding: 2rem;
+            position: relative;
+            background: linear-gradient(0deg, var(--card-bg) 0%, rgba(30, 38, 44, 0.95) 100%);
+            margin-top: -60px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .event-detail-header {
+            margin-bottom: 2rem;
+        }
+
+        .event-detail-header h2 {
+            color: var(--accent-green);
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .about-event h3 {
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .about-event p {
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .event-info {
+            background: rgba(30, 38, 44, 0.5);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-row:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .info-label {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: rgba(0, 230, 118, 0.1);
+            border-radius: 100px;
+            color: var(--accent-green);
+            font-size: 0.8rem;
+            margin: 0.25rem;
+            border: 1px solid rgba(0, 230, 118, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .tag:hover {
+            background: rgba(0, 230, 118, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .loading, .no-events {
+            color: var(--text-gray);
+            text-align: center;
+            padding: 3rem 2rem;
+            font-style: italic;
+            background: var(--gradient-dark);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-counter {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(30, 38, 44, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--accent-green);
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 10;
+        }
+
+        .event-card.active {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            border: 2px solid var(--accent-green);
+        }
+
+        .event-card.active .event-date-box {
+            background: var(--accent-green);
+        }
+
+        .event-card.active .event-date-box .day {
+            color: var(--bg-dark);
+        }
+
+        .event-card.active .event-date-box .month {
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        .event-card {
+            transition: all 0.3s ease, border-color 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .event-date-box {
+            transition: background-color 0.3s ease;
+        }
+
+        .event-date-box .day,
+        .event-date-box .month {
+            transition: color 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+
+            .event-detail-content {
+                padding: 1.5rem;
+            }
+
+            .event-detail-header h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo" style="background: var(--accent-green); display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+            <span style="color: var(--bg-dark); font-weight: bold;">BL</span>
+        </div>
+        <div class="header-text">
+            <h1>Basislager Events</h1>
+            <p>Today's Events at Basislager Leipzig</p>
+        </div>
+    </header>
+
+    <main class="content">
+        <section class="events-list">
+            <h2>Today's Events</h2>
+            <div class="events-container">
+                <p class="loading">Loading events...</p>
+            </div>
+        </section>
+
+        <section class="event-detail">
+            <p class="loading">Select an event to view details...</p>
+        </section>
+    </main>
+
+    <script>
+        window.PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiMxZTI2MmMiLz4KICA8cGF0aCBkPSJNMCAwTDIwMCAyMDBNMjAwIDBMMCAyMDAiIHN0cm9rZT0iIzJhMzYzZiIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPHRleHQgeD0iMTAwIiB5PSIxMDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2EwYTBhMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkJhc2lzbGFnZXI8L3RleHQ+Cjwvc3ZnPg==';
+    </script>
+    <script src="script.js"></script>
+</body>
+</html> 

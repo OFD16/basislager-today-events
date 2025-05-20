@@ -1,10 +1,20 @@
 {
     "functions": {
-      "api/*.php": {
-        "runtime": "vercel-php@8.4.2"
-      }
+        "api/*.php": {
+            "runtime": "vercel-php@0.7.3"
+        }
     },
     "routes": [
-      { "src": "/(.*)",  "dest": "/api/index.php" }
+        {
+            "src": "/(.*)",
+            "dest": "/api/index.php"
+        },
+        {
+            "src": "/fonts/(.*)",
+            "headers": {
+                "cache-control": "public, max-age=31536000, immutable"
+            },
+            "dest": "/fonts/$1"
+        }
     ]
-  }
+}

@@ -1,18 +1,18 @@
 <?php
-// Log to file
-debug_log("Script started");
 
-function debug_log($msg) {
-    // file_put_contents("debug.log", date("Y-m-d H:i:s") . " - " . $msg . "\n", FILE_APPEND);
+function filterEventsByDate($events, $date)
+{
+    return array_filter($events, function ($event) use ($date) {
+        return substr($event['StartDate'], 0, 10) === $date;
+    });
 }
-
-function getEvents() {
+function fetchEventsFromAPI()
+{
     $url = 'https://basislagerleipzig.spaces.nexudus.com/en/events?page=page&_depth=3&pastEvents=pastEvents';
-
     $headers = [
         'Content-Type: application/json',
         'Accept: application/json',
-        'Authorization: Bearer 6zya-_5VgbgVHoZTAAAQO8PRb0w2eK9TZINr69Xf-GiTt7MwJOd-gubY5NA0WKgb2R7obCoNBPZcIcF56psa1DTPCQxo1nQyWdCOVkf_bQJw0RApZQWOWcO2txPYt1crOhOu9Swbzyx3ryvhWY1uaw1M2XT-BdjMxv5NmeUmu-7ju7lhYVO_iLbfaEkpoT4MleSbEKgmvHQqV0QaZcdtmBRSqEQa-Giyl0Zy6p95wPtXLAaCqOh8Isckzn5MDeLfiYO3qz_fDvz7JEQcn3-DWIOKAgj0649kNG3aBKGvsynMeuo7pwr-f7QwC8aN5KEjK1-TexFIhaQ1AJgPXdeiYmBjcEk'
+        'Authorization: Bearer [senin-tokenin-buraya]'
     ];
 
     $ch = curl_init($url);
@@ -21,148 +21,220 @@ function getEvents() {
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     $result = curl_exec($ch);
-
-    if ($result === false) {
-        debug_log("CURL error: " . curl_error($ch));
-    } else {
-        debug_log("API data retrieved");
-    }
-
     curl_close($ch);
+
     $json = json_decode($result, true);
+    return $json['CalendarEvents'] ?? [];
+}
+function getThemeModeTest()
+{
+    // 30 saniyede bir light / dark şeklinde değiştir
+    // return (date("s") % 60) < 30 ? "light" : "dark";
+    $hour = date("H");
+    return ($hour >= 19 || $hour < 7) ? "dark" : "light";
+}
+$theme = getThemeModeTest();
 
-    if ($json === null) {
-        debug_log("JSON decode error. Raw data:\n" . $result);
+function extractRaum($html)
+{
+    if (preg_match('/Raum:\s*([^<\n]+)/i', $html, $match)) {
+        return trim($match[1]);
     }
-
-    return $json;
+    return '';
 }
 
-function filterEvents($events, $targetDate) {
-    $filtered = [];
-    foreach ($events as $event) {
-        $eventDate = date("Y-m-d", strtotime($event['StartDate']));
-        if ($eventDate === $targetDate) {
-            $filtered[] = $event;
-        }
-    }
-    return $filtered;
+function truncateAndClean($text, $limit = 200)
+{
+    // Markdown-style bold: **text** -> <strong>text</strong>
+    $text = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $text);
+
+    // Temizlik ama <strong> tagini koruyarak
+    $text = strip_tags($text, '<strong>');
+
+    // Truncate işlemi (HTML-aware truncation yapmıyoruz şimdilik)
+    return mb_strimwidth($text, 0, $limit, "...");
 }
 
-function printEvents($title, $events) {
-    if (!empty($title)) echo "<h2>$title</h2>";
-    $now = time();
-    foreach ($events as $event) {
-        $startTime = strtotime($event['StartDate']);
-        $showArrow = ($startTime - $now) <= 3600 && ($startTime - $now) >= 0;
 
-        // Markdown-style bold to <strong>
-        $desc = htmlspecialchars($event['ShortDescription']);
-        $desc = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $desc);
+function renderEventCard($event, $theme, $isUpcoming = false)
+{
+    $startTime = strtotime($event['StartDate']);
+    $hourLabel = date("H:i", $startTime);
+    $raum = extractRaum($event['LongDescription']);
+    $short = truncateAndClean($event['ShortDescription']);
+    $long = strip_tags($event['LongDescription'], '<p><a><strong><br>');
 
-        echo "<div class='event-card'>";
-        if ($showArrow) {
-            echo "<div class='arrow'>&lArr;</div>";
-        }
-        echo "<div class='event-content'>";
-        echo "<h3>" . htmlspecialchars($event['Name']) . "</h3>";
-        echo "<p class='description'>$desc</p>";
-        echo "<p class='date'><strong>Date:</strong> " . date("d.m.Y H:i", $startTime) . "</p>";
-        echo "</div></div>";
-    }
+    $showArrow = ($startTime - time()) <= 3600 && ($startTime - time()) >= 0;
+    echo "<div class='timeline-row'>";
+    echo "<div class='timeline-time'>$hourLabel</div>";
+    echo "<div class='event-card $theme'>";
+    // if ($showArrow) {
+    //     echo "<div class='arrow'><img src='https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Feather-arrows-chevrons-left.svg/1280px-Feather-arrows-chevrons-left.svg.png' alt='arrow' /></div>";
+    // }
+    echo "<div class='event-content'>";
+    echo "<h3>" . htmlspecialchars($event['Name']) . "</h3>";
+    echo "<p class='description'>$short</p>";
+    if ($raum)
+        echo "<div class='raum-label'><strong>Room:</strong> $raum</div>";
+    if ($showArrow)
+        echo "<div class='long-description'>$long</div>";
+    echo "</div></div></div>";
 }
+
+// dummy data
+$events = fetchEventsFromAPI();
+
 
 $today = date("Y-m-d");
-$tomorrow = date("Y-m-d", strtotime("+1 day"));
+$tomorrow = date("Y-m-d", timestamp: strtotime("+1 day"));
+$todaysEvents = filterEventsByDate($events, $today);
+$tomorrowsEvents = filterEventsByDate($events, $tomorrow);
+$displayEvents = [];
+$title = "Upcoming Events";
 
-$data = getEvents();
-$allEvents = isset($data['CalendarEvents']) ? $data['CalendarEvents'] : [];
-debug_log("Total events: " . count($allEvents));
-
-$todaysEvents = filterEvents($allEvents, $today);
-$tomorrowsEvents = filterEvents($allEvents, $tomorrow);
-
-$hour = date("H");
-$theme = ($hour >= 19 || $hour < 7) ? "dark" : "light";
+if (count($todaysEvents) > 0) {
+    $displayEvents = $todaysEvents;
+    $title = "Today's Events";
+} elseif (count($tomorrowsEvents) > 0) {
+    $displayEvents = $tomorrowsEvents;
+    $title = "Tomorrow's Events";
+} else {
+    $displayEvents = $events;
+}
 ?>
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
-    <title>Events</title>
+    <!-- <meta http-equiv="refresh" content="5"> -->
+    <title>Basislager Events</title>
+    <link href="https://fonts.googleapis.com/css2?family=Founders+Grotesk&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1080px;
-            margin: 0 auto;
+            font-family: 'Founders Grotesk', sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+            background:
+                <?= $theme === "dark" ? "#101820" : "#26D07C" ?>
+            ;
+            color:
+                <?= $theme === "dark" ? "#eeeeee" : "#111111" ?>
+            ;
+            margin: 0;
             padding: 40px 20px;
-            background-color: <?= $theme === "dark" ? "#121212" : "#fefefe" ?>;
-            color: <?= $theme === "dark" ? "#f0f0f0" : "#101010" ?>;
+            max-width: 1080px;
+            margin: auto;
         }
+
         h2 {
             font-size: 36px;
-            margin-bottom: 40px;
-            border-left: 5px solid <?= $theme === "dark" ? "#00ffaa" : "#007acc" ?>;
+            margin-bottom: 30px;
+            border-left: 6px solid
+                <?= $theme === "dark" ? "#00ffaa" : "#ffffff" ?>
+            ;
             padding-left: 16px;
         }
-        .event-card {
+
+        .timeline-row {
             display: flex;
-            margin-bottom: 50px;
-            border-radius: 20px;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+
+        .timeline-time {
+            width: 80px;
+            font-size: 20px;
+            font-weight: bold;
+            color:
+                <?= $theme === "dark" ? "#aaa" : "#222" ?>
+            ;
+            padding-top: 15px;
+        }
+
+        .event-card {
+            flex: 1;
+            border-radius: 16px;
             overflow: hidden;
-            background: <?= $theme === "dark" ? "linear-gradient(135deg, #1f1f1f, #333)" : "linear-gradient(135deg, #ffffff, #e6f7ff)" ?>;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            background:
+                <?= $theme === "dark" ? "linear-gradient(135deg, #1f1f1f, #2b4d50)" : "linear-gradient(135deg, #ffffff, #a8f1eb)" ?>
+            ;
             transition: transform 0.3s ease;
+            display: flex;
         }
+
         .event-card:hover {
-            transform: scale(1.02);
+            transform: scale(1.01);
         }
+
         .arrow {
             width: 80px;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: <?= $theme === "dark" ? "#282828" : "#cdeaff" ?>;
-            font-size: 40px;
-            color: <?= $theme === "dark" ? "#00ffaa" : "#007acc" ?>;
+            background-color:
+                <?= $theme === "dark" ? "#28585c" : "#ffffff" ?>
+            ;
             animation: blink 1.2s infinite;
         }
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+
+        .arrow img {
+            width: 40px;
+            height: auto;
         }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
         .event-content {
-            padding: 30px;
+            padding: 20px 25px;
             flex: 1;
         }
+
         .event-content h3 {
-            font-size: 28px;
-            margin: 0 0 20px;
+            font-size: 24px;
+            margin-top: 0;
         }
+
         .description {
             font-size: 18px;
-            line-height: 1.6;
-            margin-bottom: 20px;
+            margin: 10px 0;
         }
-        .date {
+
+        .raum-label {
+            background-color:
+                <?= $theme === "dark" ? "#00ffaa" : "#163237" ?>
+            ;
+            color:
+                <?= $theme === "dark" ? "#163237" : "#ffffff" ?>
+            ;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .long-description {
             font-size: 16px;
-            font-weight: bold;
-            color: <?= $theme === "dark" ? "#bbb" : "#333" ?>;
+            opacity: 0.85;
+            margin-top: 10px;
         }
     </style>
 </head>
+
 <body>
-<?php
-if (count($todaysEvents) > 0) {
-    printEvents("Today's Events", $todaysEvents);
-} elseif (count($tomorrowsEvents) > 0) {
-    printEvents("Tomorrow's Events", $tomorrowsEvents);
-} elseif (count($allEvents) > 0) {
-    printEvents("Upcoming Events", array_slice($allEvents, 0, 5));
-} else {
-    echo "<h2>No events found.</h2>";
-    debug_log("No events displayed.");
-}
-?>
+    <h2><?= $title ?></h2>
+    <?php foreach ($displayEvents as $event)
+        renderEventCard($event, $theme); ?>
 </body>
+
 </html>

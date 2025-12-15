@@ -19,7 +19,7 @@ function fetchEventsFromAPI()
   curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
   curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
   $result = curl_exec($ch);
-  curl_close($ch);
+  // curl_close() is deprecated in PHP 8.5
 
   $json = json_decode($result, true);
   return $json['CalendarEvents'] ?? [];
@@ -133,11 +133,22 @@ foreach ($displayEvents as $event) {
   $start = strtotime($event['StartDate']);
   $timeLeft = $start - time();
   if ($timeLeft < 7200 && $timeLeft > 0) {
-    if (stripos($raum, 'kilimanjaro') !== false)
+    $long = $event['LongDescription'] ?? '';
+    $raum = extractRaum($long);
+    $resource_name = $event['Resource']['Name'] ?? '';
+    if (stripos($resource_name, 'Kilimanjaro') !== false) {
+      $raum = 'Kilimanjaro';
+    } elseif (stripos($resource_name, 'Olymp') !== false) {
+      $raum = 'Olymp';
+    } elseif (stripos($resource_name, 'Media Hub') !== false) {
+      $raum = 'Media Hub';
+    }
+    
+    if (stripos($raum ?? '', 'kilimanjaro') !== false)
       $kilimanjaroAlert = true;
-    if (stripos($raum, 'olymp') !== false)
+    if (stripos($raum ?? '', 'olymp') !== false)
       $olympAlert = true;
-    if (stripos($raum, 'mediahub') !== false)
+    if (stripos($raum ?? '', 'mediahub') !== false)
       $mediahubAlert = true;
   }
 }
